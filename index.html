@@ -371,6 +371,19 @@
             color: var(--primary-color);
         }
         
+        .visitor-category {
+            display: inline-block;
+            background: rgba(211, 47, 47, 0.1);
+            color: var(--primary-color);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
         .visitor-review {
             margin-top: 15px;
             padding-top: 15px;
@@ -654,6 +667,20 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" class="form-control" required>
+                            <option value="">Select your category</option>
+                            <option value="General Visitor">General Visitor</option>
+                            <option value="Committee Member">Committee Member</option>
+                            <option value="Sponsor">Sponsor</option>
+                            <option value="Volunteer">Volunteer</option>
+                            <option value="Guest of Honor">Guest of Honor</option>
+                            <option value="Performer">Performer</option>
+                            <option value="Media Personnel">Media Personnel</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="review">Your Review (Optional)</label>
                         <textarea id="review" class="form-control" placeholder="Share your thoughts about our celebration..."></textarea>
                     </div>
@@ -704,8 +731,8 @@
             const visitorCount = document.getElementById('visitorCount');
             
             // JSONBin.io configuration
-            const apiKey = '$2b$10$your_api_key_here'; // Replace with your actual API key
-            const binId = 'your_bin_id_here'; // Replace with your actual bin ID
+            const apiKey = '$2a$10$CWX9jvkH1iEtpO6JmEIaMeztRN2i7U0Ffl5a2M/njVYHpCOPVuAiq'; // Your API key
+            const binId = '68dab96ad0ea881f408f6192'; // Your Bin ID
             const apiUrl = `https://api.jsonbin.io/v3/b/${binId}/latest`;
             
             // Function to fetch visitors from JSONBin
@@ -798,6 +825,7 @@
                             <i class="fas fa-phone"></i>
                             ${visitor.phone}
                         </div>
+                        <div class="visitor-category">${visitor.category}</div>
                         ${reviewHTML}
                         <div class="visitor-time">
                             <i class="far fa-clock"></i>
@@ -833,14 +861,16 @@
                 
                 const name = document.getElementById('name').value.trim();
                 const phone = document.getElementById('phone').value.trim();
+                const category = document.getElementById('category').value;
                 const review = document.getElementById('review').value.trim();
                 
-                if (name && phone) {
+                if (name && phone && category) {
                     // Create visitor object
                     const visitor = {
                         id: Date.now(),
                         name: name,
                         phone: phone,
+                        category: category,
                         review: review,
                         timestamp: new Date().toLocaleString()
                     };
