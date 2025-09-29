@@ -733,26 +733,33 @@
             // JSONBin.io configuration
             const apiKey = '$2a$10$CWX9jvkH1iEtpO6JmEIaMeztRN2i7U0Ffl5a2M/njVYHpCOPVuAiq'; // Your API key
             const binId = '68dab96ad0ea881f408f6192'; // Your Bin ID
-            const apiUrl = `https://api.jsonbin.io/v3/b/${binId}/latest`;
+            const readUrl = `https://api.jsonbin.io/v3/b/${binId}/latest`; // For reading
+            const writeUrl = `https://api.jsonbin.io/v3/b/${binId}`; // For writing
             
             // Function to fetch visitors from JSONBin
             async function fetchVisitors() {
                 try {
-                    const response = await fetch(apiUrl, {
+                    console.log('Fetching visitors from:', readUrl);
+                    const response = await fetch(readUrl, {
                         headers: {
                             'X-Master-Key': apiKey
                         }
                     });
                     
+                    console.log('Fetch response status:', response.status);
+                    
                     if (!response.ok) {
-                        throw new Error('Failed to fetch visitors');
+                        const errorData = await response.json();
+                        console.error('Error response:', errorData);
+                        throw new Error(`Failed to fetch visitors: ${errorData.message || 'Unknown error'}`);
                     }
                     
                     const data = await response.json();
+                    console.log('Fetched data:', data);
                     return data.record || [];
                 } catch (error) {
                     console.error('Error fetching visitors:', error);
-                    showNotification('Failed to load visitors. Please try again later.', 'error');
+                    showNotification(`Failed to load visitors: ${error.message}`, 'error');
                     return [];
                 }
             }
@@ -760,7 +767,10 @@
             // Function to update visitors in JSONBin
             async function updateVisitors(visitors) {
                 try {
-                    const response = await fetch(apiUrl, {
+                    console.log('Updating visitors to:', writeUrl);
+                    console.log('Visitors data:', visitors);
+                    
+                    const response = await fetch(writeUrl, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -769,14 +779,20 @@
                         body: JSON.stringify(visitors)
                     });
                     
+                    console.log('Update response status:', response.status);
+                    
                     if (!response.ok) {
-                        throw new Error('Failed to update visitors');
+                        const errorData = await response.json();
+                        console.error('Error response:', errorData);
+                        throw new Error(`Failed to update visitors: ${errorData.message || 'Unknown error'}`);
                     }
                     
-                    return await response.json();
+                    const data = await response.json();
+                    console.log('Update response data:', data);
+                    return data;
                 } catch (error) {
                     console.error('Error updating visitors:', error);
-                    showNotification('Failed to save your details. Please try again.', 'error');
+                    showNotification(`Failed to save your details: ${error.message}`, 'error');
                     return null;
                 }
             }
@@ -858,11 +874,14 @@
             // Form submission
             visitorForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                console.log('Form submitted');
                 
                 const name = document.getElementById('name').value.trim();
                 const phone = document.getElementById('phone').value.trim();
                 const category = document.getElementById('category').value;
                 const review = document.getElementById('review').value.trim();
+                
+                console.log('Form data:', { name, phone, category, review });
                 
                 if (name && phone && category) {
                     // Create visitor object
@@ -875,8 +894,11 @@
                         timestamp: new Date().toLocaleString()
                     };
                     
+                    console.log('Visitor object:', visitor);
+                    
                     // Add to visitors array
                     visitors.push(visitor);
+                    console.log('Updated visitors array:', visitors);
                     
                     // Update JSONBin
                     const result = await updateVisitors(visitors);
@@ -892,6 +914,7 @@
                         visitorForm.reset();
                     }
                 } else {
+                    console.log('Form validation failed');
                     showNotification('Please fill in all required fields.', 'error');
                 }
             });
