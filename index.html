@@ -530,6 +530,24 @@
             margin-top: 10px;
         }
         
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .loading i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -607,11 +625,11 @@
                     <div class="stat-label">Visitors</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">4</div>
+                    <div class="stat-number">5</div>
                     <div class="stat-label">Days of Celebration</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">5+</div>
+                    <div class="stat-number">10+</div>
                     <div class="stat-label">Events</div>
                 </div>
             </div>
@@ -650,7 +668,9 @@
                 </h2>
                 
                 <div id="visitorList" class="visitor-list">
-                    <!-- Visitor cards will be dynamically added here -->
+                    <div class="loading">
+                        <i class="fas fa-spinner"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -661,16 +681,16 @@
             <div class="footer-content">
                 <div class="logo">
                     <i class="fas fa-dharmachakra"></i>
-                    <h3>SHRI RANGPUR SARWAJANIN DURGOTSAVA</h3>
+                    <h3>Durga Puja Puja Mandal</h3>
                 </div>
                 <div class="social-links">
-                    <a href="https://www.youtube.com/watch?v=wVDzyOdj5Mo"><i class="fab fa-facebook"></i></a>
-                    <a href="https://www.youtube.com/watch?v=wVDzyOdj5Mo"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.youtube.com/watch?v=wVDzyOdj5Mo"><i class="fab fa-twitter"></i></a>
-                    <a href="https://www.youtube.com/watch?v=wVDzyOdj5Mo"><i class="fab fa-youtube"></i></a>
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
                 </div>
                 <div class="copyright">
-                    &copy;  @2025 Durga Puja Mandal. All rights reserved.<br>SIVASAGAR
+                    &copy; 2023 Durga Puja Puja Mandal. All rights reserved.
                 </div>
             </div>
         </div>
@@ -683,57 +703,74 @@
             const notification = document.getElementById('notification');
             const visitorCount = document.getElementById('visitorCount');
             
-            // Load existing visitors from localStorage
-            let visitors = JSON.parse(localStorage.getItem('durgaPujaVisitors')) || [];
+            // JSONBin.io configuration
+            const apiKey = '$2b$10$your_api_key_here'; // Replace with your actual API key
+            const binId = 'your_bin_id_here'; // Replace with your actual bin ID
+            const apiUrl = `https://api.jsonbin.io/v3/b/${binId}/latest`;
+            
+            // Function to fetch visitors from JSONBin
+            async function fetchVisitors() {
+                try {
+                    const response = await fetch(apiUrl, {
+                        headers: {
+                            'X-Master-Key': apiKey
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch visitors');
+                    }
+                    
+                    const data = await response.json();
+                    return data.record || [];
+                } catch (error) {
+                    console.error('Error fetching visitors:', error);
+                    showNotification('Failed to load visitors. Please try again later.', 'error');
+                    return [];
+                }
+            }
+            
+            // Function to update visitors in JSONBin
+            async function updateVisitors(visitors) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Master-Key': apiKey
+                        },
+                        body: JSON.stringify(visitors)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to update visitors');
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error updating visitors:', error);
+                    showNotification('Failed to save your details. Please try again.', 'error');
+                    return null;
+                }
+            }
+            
+            // Load existing visitors from JSONBin
+            let visitors = [];
             
             // Display existing visitors
-            displayVisitors();
-            updateVisitorCount();
-            
-            // Form submission
-            visitorForm.addEventListener('submit', function(e) {
-                e.preventDefault();
+            async function displayVisitors() {
+                // Show loading indicator
+                visitorList.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
                 
-                const name = document.getElementById('name').value.trim();
-                const phone = document.getElementById('phone').value.trim();
-                const review = document.getElementById('review').value.trim();
+                // Fetch visitors from JSONBin
+                visitors = await fetchVisitors();
                 
-                if (name && phone) {
-                    // Create visitor object
-                    const visitor = {
-                        id: Date.now(),
-                        name: name,
-                        phone: phone,
-                        review: review,
-                        timestamp: new Date().toLocaleString()
-                    };
-                    
-                    // Add to visitors array
-                    visitors.push(visitor);
-                    
-                    // Save to localStorage
-                    localStorage.setItem('durgaPujaVisitors', JSON.stringify(visitors));
-                    
-                    // Display updated list
-                    displayVisitors();
-                    updateVisitorCount();
-                    
-                    // Show success message
-                    showNotification('Thank you for registering! Your details have been added.', 'success');
-                    
-                    // Reset form
-                    visitorForm.reset();
-                } else {
-                    showNotification('Please fill in all required fields.', 'error');
-                }
-            });
-            
-            // Function to display visitors
-            function displayVisitors() {
+                // Clear loading indicator
                 visitorList.innerHTML = '';
                 
                 if (visitors.length === 0) {
                     visitorList.innerHTML = '<p>No visitors registered yet. Be the first one!</p>';
+                    updateVisitorCount();
                     return;
                 }
                 
@@ -769,6 +806,8 @@
                     `;
                     visitorList.appendChild(visitorCard);
                 });
+                
+                updateVisitorCount();
             }
             
             // Function to update visitor count
@@ -787,6 +826,51 @@
                     notification.style.display = 'none';
                 }, 5000);
             }
+            
+            // Form submission
+            visitorForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('name').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const review = document.getElementById('review').value.trim();
+                
+                if (name && phone) {
+                    // Create visitor object
+                    const visitor = {
+                        id: Date.now(),
+                        name: name,
+                        phone: phone,
+                        review: review,
+                        timestamp: new Date().toLocaleString()
+                    };
+                    
+                    // Add to visitors array
+                    visitors.push(visitor);
+                    
+                    // Update JSONBin
+                    const result = await updateVisitors(visitors);
+                    
+                    if (result) {
+                        // Display updated list
+                        displayVisitors();
+                        
+                        // Show success message
+                        showNotification('Thank you for registering! Your details have been added.', 'success');
+                        
+                        // Reset form
+                        visitorForm.reset();
+                    }
+                } else {
+                    showNotification('Please fill in all required fields.', 'error');
+                }
+            });
+            
+            // Initial load of visitors
+            displayVisitors();
+            
+            // Refresh visitors every 30 seconds to get new entries
+            setInterval(displayVisitors, 30000);
         });
     </script>
 </body>
